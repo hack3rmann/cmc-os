@@ -48,11 +48,11 @@ enum
 int
 main(void)
 {
-    size_t table_size;
+    ssize_t table_size;
 
     errno = 0;
 
-    if (1 != scanf("%zu", &table_size)) {
+    if (1 != scanf("%zd", &table_size)) {
         fprintf(stderr, "failed to read from stdin\n");
         exit(EXIT_FAILURE);
     }
@@ -62,8 +62,8 @@ main(void)
         exit(EXIT_FAILURE);
     }
 
-    if (table_size >= MAX_TABLE_SIZE) {
-        fprintf(stderr, "invalid table size: should be less than 2000\n");
+    if (table_size >= MAX_TABLE_SIZE || table_size <= 1) {
+        fprintf(stderr, "invalid table size: should be less than 2000 and greater than 1\n");
         exit(EXIT_FAILURE);
     }
 
@@ -74,8 +74,8 @@ main(void)
 
     uint16_t *table = calculate_division_table(table_size);
 
-    for (size_t i = 0; i < table_size; ++i) {
-        for (size_t j = 1; j < table_size; ++j) {
+    for (size_t i = 0; i < (size_t) table_size; ++i) {
+        for (size_t j = 1; j < (size_t) table_size; ++j) {
             printf("%u ", table[i + table_size * j]);
         }
 
