@@ -1,3 +1,5 @@
+#include <stdckdint.h>
+
 int
 satsum(int lhs, int rhs)
 {
@@ -11,7 +13,7 @@ satsum(int lhs, int rhs)
 
     int result;
 
-    if (__builtin_add_overflow(lhs, rhs, &result)) {
+    if (ckd_add(&result, lhs, rhs)) {
         if (result < 0) {
             return MY_INT_MAX;
         } else {
