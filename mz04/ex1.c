@@ -28,7 +28,7 @@ read_24bit_from_stdin(void)
         exit(EXIT_FAILURE);
     }
 
-    if (result < 0 || result > MAX_24BIT) {
+    if (result < 0 || result > (int) MAX_24BIT) {
         fprintf(stderr, "invalid 24-bit number %d\n", result);
         exit(EXIT_FAILURE);
     }
@@ -88,7 +88,7 @@ main(int argc, char *argv[])
 
     for (uint32_t cur_number = read_24bit_from_stdin(); EOF_24BIT != cur_number; cur_number = read_24bit_from_stdin()) {
         uint8_t const bytes[] = {
-            cur_number >> 20,
+            15 & (cur_number >> 20),
             255 & (cur_number >> 12),
             15 & (cur_number >> 8),
             255 & cur_number,
