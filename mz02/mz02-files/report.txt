@@ -1,0 +1,69 @@
+ANSWERS
+***Answer 29:
+aplusb.c:2:1: error: return type of ‘main’ is not ‘int’ [-Werror=main]
+    2 | main()
+      | ^~~~
+aplusb.c: In function ‘main’:
+aplusb.c:5:5: error: implicit declaration of function ‘scanf’ [-Wimplicit-function-declaration]
+    5 |     scanf("%d%d", a, &b);
+      |     ^~~~~
+aplusb.c:1:1: note: include ‘<stdio.h>’ or provide a declaration of ‘scanf’
+  +++ |+#include <stdio.h>
+    1 | void
+aplusb.c:5:5: error: incompatible implicit declaration of built-in function ‘scanf’ [-Werror=builtin-declaration-mismatch]
+    5 |     scanf("%d%d", a, &b);
+      |     ^~~~~
+aplusb.c:5:5: note: include ‘<stdio.h>’ or provide a declaration of ‘scanf’
+aplusb.c:5:13: error: format ‘%d’ expects argument of type ‘int *’, but argument 2 has type ‘int’ [-Werror=format=]
+    5 |     scanf("%d%d", a, &b);
+      |            ~^     ~
+      |             |     |
+      |             int * int
+aplusb.c:6:7: error: statement with no effect [-Werror=unused-value]
+    6 |     c == a + b;
+      |     ~~^~~~~~~~
+aplusb.c:7:5: error: implicit declaration of function ‘printf’ [-Wimplicit-function-declaration]
+    7 |     printf("%d\n", c);
+      |     ^~~~~~
+aplusb.c:7:5: note: include ‘<stdio.h>’ or provide a declaration of ‘printf’
+aplusb.c:7:5: error: incompatible implicit declaration of built-in function ‘printf’ [-Werror=builtin-declaration-mismatch]
+aplusb.c:7:5: note: include ‘<stdio.h>’ or provide a declaration of ‘printf’
+cc1: all warnings being treated as errors
+***Answer 30:
+#include <stdio.h>
+
+int
+main()
+{
+    int a, b, c;
+    scanf("%d%d", &a, &b);
+
+    c = a + b;
+
+    printf("%d\n", c);
+}
+
+-rwxr-xr-x 1 s02230080 s02230080 16728 Sep 10 19:28 aplusb
+***Answer 31:
+17962
+***Answer 32:
+./newtask3/aplusb < 001.dat > 001.res
+***Answer 33:
+32809
+***Answer 34:
+0m0.006s
+***Answer 35:
+360000000
+***Answer 36:
+Печатает строки, которые содержат 'sh' из списка всех рабочих процессов (с длинным описанием).
+***Answer 37:
+ulimit -c печатает 'unlimited'
+ulimit -c 0 запрещает дампы ядра.
+***Answer 38:
+There are no sections in this file.
+***Answer 39:
+ls /etc -Slr | grep .conf | head -n 5
+***Answer 40:
+wc -l /usr/share/dict/words | grep -v [aeiou]
+
+SHA2-256(stdin)= 3046022100f97a414f5b95521f7402bf50d98351a16a10c6a54976f8e09e5c88d6283b5030022100b4ebc1adafbb7513837ed78a2bc5f4069734af8f25203d07eade4e625ff1d85e

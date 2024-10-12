@@ -5,122 +5,110 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdint.h>
-
-typedef int FileDesc;
 
 enum
 {
-    FILE_NAME_ARG_INDEX = 1,
-    N_ELEMENTS_ARG_INDEX = FILE_NAME_ARG_INDEX + 1,
-    MIN_N_ARGS = N_ELEMENTS_ARG_INDEX + 1,
-    RW_USER_GROUP_PERMISSON = 0660,
+    MIN_N_ARGS = 3,
+    RW_USER_GROUP_PERMISSIONS = 0660,
     BASE_TEN_RADIX = 10,
-    SYSCALL_FAIL_VALUE = -1,
+    MIN_N_VALUES = 1,
+    FILE_NAME_INDEX = 1,
+    N_VALUES_INDEX = 2,
+    SYSCALL_FAILURE = -1,
 };
 
-double
-double_read_exact(FileDesc file_desc)
-{
-    uint8_t result[sizeof(double)] = {};
-    size_t n_remaining_bytes = sizeof(result);
-
-    while (0 != n_remaining_bytes) {
-        auto const n_read = read(file_desc, result + sizeof(result) - n_remaining_bytes, n_remaining_bytes);
-
-        if (SYSCALL_FAIL_VALUE == n_read) {
-            fprintf(stderr, "failed to read from file #%d: %s\n", file_desc, strerror(errno));
-            exit(EXIT_FAILURE);
-        }
-
-        n_remaining_bytes -= n_read;
-    }
-
-    return *(double *) result;
-}
-
 void
-double_write_exact(FileDesc file_desc, double value)
+print_lseek_failed_message(void)
 {
-    size_t n_remaining_bytes = sizeof(value);
-    auto const value_bytes = (uint8_t *) &value;
-
-    while (0 != n_remaining_bytes) {
-        auto const n_wrote = write(file_desc, value_bytes + sizeof(value) - n_remaining_bytes, n_remaining_bytes);
-
-        if (SYSCALL_FAIL_VALUE == n_wrote) {
-            fprintf(stderr, "filed to write to file #%d: %s\n", file_desc, strerror(errno));
-            exit(EXIT_FAILURE);
-        }
-
-        n_remaining_bytes -= n_wrote;
-    }
+    fprintf(stderr, "`lseek` failed: %s\n", strerror(errno));
 }
 
 int
-main(int argc, char *argv[])
+main(int argc, char **argv)
 {
     if (argc < MIN_N_ARGS) {
-        fprintf(stderr, "minimum %d arguments required, but got %d\n", MIN_N_ARGS, argc);
+        exit(EXIT_FAILURE);
+    }
+
+    auto const file_name = argv[FILE_NAME_INDEX];
+    errno = 0;
+    char *parse_end = nullptr;
+    auto n_values = strtol(argv[N_VALUES_INDEX], &parse_end, BASE_TEN_RADIX);
+
+    if (0 != errno || '\0' != *parse_end || parse_end == argv[N_VALUES_INDEX] || n_values != (int) n_values) {
+        fprintf(stderr, "invalid number of values '%s'\n", argv[N_VALUES_INDEX]);
+        exit(EXIT_FAILURE);
+    }
+
+    if (n_values < MIN_N_VALUES) {
+        return 0;
+    }
+
+    errno = 0;
+    auto const file_desc = open(file_name, O_RDWR, RW_USER_GROUP_PERMISSIONS);
+
+    if (SYSCALL_FAILURE == file_desc) {
+        fprintf(stderr, "failed to open a file '%s': %s\n", file_name, strerror(errno));
         exit(EXIT_FAILURE);
     }
 
     errno = 0;
-    char *parse_end = nullptr;
-    auto const n_elements = strtol(argv[N_ELEMENTS_ARG_INDEX], &parse_end, BASE_TEN_RADIX);
+    auto file_size = lseek(file_desc, 0, SEEK_END);
 
-    if ('\0' != *parse_end || 0 != errno || parse_end == argv[N_ELEMENTS_ARG_INDEX]) {
-        fprintf(stderr, "invalid element count '%s'\n", argv[N_ELEMENTS_ARG_INDEX]);
+    if (SYSCALL_FAILURE == file_size) {
+        print_lseek_failed_message();
         exit(EXIT_FAILURE);
     }
 
-    if (n_elements < 1) {
-        exit(EXIT_SUCCESS);
+    if (file_size / sizeof(double) < n_values) {
+        n_values = file_size / sizeof(double);
     }
 
-    auto const file_name = argv[FILE_NAME_ARG_INDEX];
-    auto const file_desc = open(file_name, O_RDWR, RW_USER_GROUP_PERMISSON);
+    errno = 0;
 
-    if (SYSCALL_FAIL_VALUE == file_desc) {
-        fprintf(stderr, "failed to open file '%s': %s\n", file_name, strerror(errno));
+    if (SYSCALL_FAILURE == lseek(file_desc, 0, SEEK_SET)) {
+        print_lseek_failed_message();
         exit(EXIT_FAILURE);
     }
 
-    auto const file_size = lseek(file_desc, 0, SEEK_END);
+    auto prev = 0.0;
+    auto cur = 0.0;
 
-    if (SYSCALL_FAIL_VALUE == file_size) {
-        fprintf(stderr, "`lseek` failed: %s\n", strerror(errno));
+    errno = 0;
+
+    if (SYSCALL_FAILURE == read(file_desc, &prev, sizeof(prev))) {
+        fprintf(stderr, "failed to read from file '%s': %s\n", file_name, strerror(errno));
         exit(EXIT_FAILURE);
     }
 
-    auto n_elements_to_proccess = (size_t) n_elements;
+    for (size_t i = 1; i < (size_t) n_values; i++) {
+        errno = 0;
 
-    if (0 != file_size % sizeof(double) || file_size < n_elements * sizeof(double)) {
-        n_elements_to_proccess = (size_t) file_size / sizeof(double);
-    }
-
-    if (SYSCALL_FAIL_VALUE == lseek(file_desc, 0, SEEK_SET)) {
-        fprintf(stderr, "`lseek` failed: %s\n", strerror(errno));
-        exit(EXIT_FAILURE);
-    }
-
-    auto prev = double_read_exact(file_desc);
-
-    for (size_t i = 1; i < n_elements_to_proccess; i++) {
-        auto const cur = double_read_exact(file_desc);
-        auto const next = cur - prev;
-
-        if (SYSCALL_FAIL_VALUE == lseek(file_desc, -sizeof(next), SEEK_CUR)) {
-            fprintf(stderr, "`lseek` failed: %s\n", strerror(errno));
+        if (SYSCALL_FAILURE == read(file_desc, &cur, sizeof(cur))) {
+            fprintf(stderr, "Error code: %d\n", errno);
             exit(EXIT_FAILURE);
         }
 
-        double_write_exact(file_desc, next);
+        auto const new_cur = cur - prev;
 
-        prev = next;
+        errno = 0;
+
+        if (SYSCALL_FAILURE == lseek(file_desc, -sizeof(new_cur), SEEK_CUR)) {
+            fprintf(stderr, "Error code: %d\n", errno);
+            exit(EXIT_FAILURE);
+        }
+
+        errno = 0;
+
+        if (SYSCALL_FAILURE == write(file_desc, &new_cur, sizeof(new_cur))) {
+            fprintf(stderr, "Error code: %d\n", errno);
+            exit(EXIT_FAILURE);
+        }
+
+        prev = new_cur;
     }
 
-    if (SYSCALL_FAIL_VALUE == close(file_desc)) {
+    if (SYSCALL_FAILURE == close(file_desc)) {
         fprintf(stderr, "failed to close a file '%s': %s\n", file_name, strerror(errno));
         exit(EXIT_FAILURE);
     }

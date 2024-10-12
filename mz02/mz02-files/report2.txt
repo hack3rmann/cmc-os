@@ -1,0 +1,31 @@
+ANSWERS
+***Answer 17:
+/home/s02230080 - домашняя директория.
+***Answer 18:
+/usr/include
+***Answer 19:
+755, время модификации такое же, как и время создания.
+***Answer 20:
+Размер = 38 байт, содержимое = "1 /home/s02230080 2 /home/s02230080 3"
+***Answer 21:
+/etc/cloud
+***Answer 22:
+total 20
+-rw-r--r-- 1 s02230080 s02230080   724 Sep 10 19:13 hosts
+-rw-r--r-- 1 s02230080 s02230080 14847 Sep 10 19:13 passwd
+***Answer 23:
+total 20
+-rw-r--r-- 1 s02230080 s02230080   724 Sep 10 19:13 hosts2
+-rw-r--r-- 1 s02230080 s02230080 14847 Sep 10 19:13 passwd
+***Answer 24:
+USER=s02230080, UID=1234
+***Answer 25:
+/bin/bash
+***Answer 26:
+/etc:/home/s02230080/.local/bin:/home/s02230080/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/home/s02230080/.dotnet/tools:/usr/include
+***Answer 27:
+/usr/bin
+***Answer 28:
+ls /123 вернула 2. ls /home вернула 0
+
+SHA2-256(stdin)= 30440220306608e1cfa09d3d3157c6a5e97afa2aff83e608854e0751edd44514113c1380022039a1629254daa978e14483a02967ad74ee5f90f70d08cb1a06262df2cc93655e

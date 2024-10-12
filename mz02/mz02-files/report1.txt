@@ -1,0 +1,42 @@
+ANSWERS
+***Answer 1:
+-f
+***Answer 2:
+man 1 write описывает write(1) - отправку сообщения другому пользователю, а man 2 write описывает write(2) - запись по файловому дескриптору.
+***Answer 3:
+cat - concatenate files and print on the standard output, grep - print lines that match patterns, head - output the first part of files, yes - output a string repeatedly until killed.
+***Answer 4:
+В алфавитном порядке, если не указаны опции -cftuvSUX или --sort
+***Answer 5:
+d означает директорию, "Jul 24 11:41" означает дату и время модификаци
+***Answer 6:
+-Sla
+***Answer 7:
+host.conf
+***Answer 8:
+-rw-r--r--. 1 root root    58 Nov 29  2023 /etc/networks
+-rw-r--r--  1 root root 14847 Sep  8 10:47 /etc/passwd
+**Answer 9:
+cat /etc/hosts > ~/file3
+cat /etc/passwd >> ~/file3
+cat /etc/fstab >> ~/file3
+***Answer 10:
+rw-r----x 641
+r---wx--- 430
+rwxr-x--- 750
+r--r----x 441
+rw-rw--w- 662
+***Answer 11:
+0022, rw-r--r--
+***Answer 12:
+026, umask 026
+***Answer 13:
+chmod 750 newtask1
+***Answer 14:
+4 байта
+***Answer 15:
+cat пишет в файл по одной строке, то есть, запись идёт после нажатия Enter. Было введено 4 символа (включая перевод строки).
+***Answer 16:
+file6 на 1 байт короче file5, потому что не содержит '\n'.
+
+SHA2-256(stdin)= 3045022100d61152c36f74f5cbd0ea9177df1b966edb42d7a9076ec012a9737c40a235b1620220559a40da0f420cbd6631fc14431f13baaecde127bca4e3c9636ef236a2c84844
