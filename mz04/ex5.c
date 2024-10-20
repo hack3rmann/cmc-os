@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <limits.h>
 
 typedef int FileDesc;
 
@@ -14,7 +15,7 @@ enum
     ARG_OUTUT_FILE_INDEX = 2,
     MIN_N_ARGS = 4,
     BASE_TEN_RADIX = 10,
-    N_BYTE_BITS = 8,
+    N_BYTE_BITS = CHAR_BIT,
     RW_USER_PERMMISSION = 0600,
     ARG_MOD_INDEX = 3,
     SYSCALL_FAILURE = -1,

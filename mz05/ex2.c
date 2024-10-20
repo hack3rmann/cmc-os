@@ -2,15 +2,18 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <string.h>
+
+static char const PERMISSIONS_TEMPLATE[] = "rwxrwxrwx";
 
 enum
 {
     PERMISSIONS_ARG_START_INDEX = 1,
     BASE_EIGHT_RADIX = 8,
-    N_PERMISSIONS_BITS = 9,
     MIN_PERMISSIONS_VALUE = 0,
+    PERMISSIONS_STRING_LEN = sizeof(PERMISSIONS_TEMPLATE) - 1,
+    N_PERMISSIONS_BITS = PERMISSIONS_STRING_LEN,
     MAX_PERMISSIONS_VALUE = (1 << N_PERMISSIONS_BITS) - 1,
-    PERMISSIONS_STRING_LEN = N_PERMISSIONS_BITS,
 };
 
 typedef struct PermissionsDisplayed
@@ -40,7 +43,8 @@ Permissions_parse(char const *src)
 PermissionsDisplayed
 Permissions_display(Permissions self)
 {
-    auto result = (PermissionsDisplayed){.string = "rwxrwxrwx"};
+    auto result = (PermissionsDisplayed){};
+    strncpy(result.string, PERMISSIONS_TEMPLATE, sizeof(result.string));
 
     uint32_t cur_bits = self;
 
