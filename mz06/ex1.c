@@ -15,7 +15,7 @@ enum
 };
 
 void
-tree_recursive(char const* dir_path, bool show_hidden, size_t depth)
+tree_recursive(char const *dir_path, bool show_hidden, size_t depth)
 {
     auto const dir = opendir(dir_path);
 
