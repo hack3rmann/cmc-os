@@ -1,22 +1,37 @@
-#include <linux/limits.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <dirent.h>
 #include <stdio.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
-#include <stdint.h>
-#include <limits.h>
+#include <dirent.h>
+
+static char const exe_suffix[] = ".exe";
 
 enum
 {
+    CLOSE_DIR_FAILURE = -1,
     SYSCALL_FAILURE = -1,
+    EXE_SUFFIX_LEN = sizeof(exe_suffix) - 1,
+    DIR_PATH_ARG_INDEX = 1,
+    MIN_N_ARGS = DIR_PATH_ARG_INDEX + 1,
 };
 
-void
-tree_recursive(char const *dir_path, bool show_hidden, size_t depth)
+bool
+contains_suffix(char const *src, size_t src_len, char const *suffix, size_t suffix_len)
 {
+    return src_len >= suffix_len && 0 == strcmp(src + src_len - suffix_len, suffix);
+}
+
+int
+main(int argc, char *argv[])
+{
+    if (argc < MIN_N_ARGS) {
+        fprintf(stderr, "%d args required\n", MIN_N_ARGS);
+        exit(EXIT_FAILURE);
+    }
+
+    auto const dir_path = argv[DIR_PATH_ARG_INDEX];
     auto const dir = opendir(dir_path);
 
     if (nullptr == dir) {
@@ -24,51 +39,38 @@ tree_recursive(char const *dir_path, bool show_hidden, size_t depth)
         exit(EXIT_FAILURE);
     }
 
-    for (struct dirent *entry = readdir(dir); nullptr != entry; entry = readdir(dir)) {
-        char *entry_path = nullptr;
+    size_t n_files = 0;
 
-        if (0 == strcmp(entry->d_name, ".") || 0 == strcmp(entry->d_name, "..")) {
-            free(entry_path);
-            continue;
+    for (auto entry = readdir(dir); nullptr != entry; entry = readdir(dir)) {
+        char *absolute_path = nullptr;
+        asprintf(&absolute_path, "%s/%s", dir_path, entry->d_name);
+
+        if (nullptr == absolute_path) {
+            exit(EXIT_FAILURE);
         }
 
-        if (!show_hidden && entry->d_name[0] == '.') {
-            free(entry_path);
-            continue;
+        auto file_stat = (struct stat){};
+
+        if (SYSCALL_FAILURE == stat(absolute_path, &file_stat)) {
+            fprintf(stderr, "failed to stat '%s': %s\n", absolute_path, strerror(errno));
+            free(absolute_path);
+            exit(EXIT_FAILURE);
         }
 
-        asprintf(&entry_path, "%s/%s", dir_path, entry->d_name);
-        struct stat entry_stat;
+        auto const entry_name_len = strlen(entry->d_name);
+        auto const is_regular_executable = S_ISREG(file_stat.st_mode) && !access(absolute_path, X_OK);
 
-        if (SYSCALL_FAILURE == lstat(entry_path, &entry_stat)) {
-            fprintf(stderr, "failed to stat file '%s': %s\n", entry_path, strerror(errno));
-            free(entry_path);
-            continue;
+        if (is_regular_executable && contains_suffix(entry->d_name, entry_name_len, exe_suffix, EXE_SUFFIX_LEN)) {
+            n_files += 1;
         }
 
-        for (size_t i = 0; i < 2 * depth; ++i) {
-            putchar(' ');
-        }
-
-        printf("%s\n", entry->d_name);
-
-        if (S_ISDIR(entry_stat.st_mode)) {
-            tree_recursive(entry_path, show_hidden, depth + 1);
-        }
-
-        free(entry_path);
+        free(absolute_path);
     }
 
-    closedir(dir);
-}
-
-int
-main(int argc, char *argv[])
-{
-    if (argc < 2) {
-        fprintf(stderr, "2 args expected\n");
+    if (CLOSE_DIR_FAILURE == closedir(dir)) {
+        fprintf(stderr, "failed to close directory '%s': %s\n", dir_path, strerror(errno));
         exit(EXIT_FAILURE);
     }
 
-    tree_recursive(argv[1], false, 0);
+    printf("%zu\n", n_files);
 }
