@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+// #include <stdio.h>
 
 typedef struct Str
 {
@@ -96,8 +97,10 @@ normalize_path(char *path)
         if (Str_eq(segment, Str("."))) {
             continue;
         } else if (Str_eq(segment, Str(".."))) {
-            write_ptr -= 1;
-            write_ptr = return_write_back(write_ptr);
+            if (path < write_ptr) {
+                write_ptr -= 1;
+                write_ptr = return_write_back(write_ptr);
+            }
         } else {
             *write_ptr = '/';
             write_ptr += 1;
