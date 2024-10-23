@@ -1,8 +1,8 @@
-#include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <stdlib.h>
 #include <dirent.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 void
@@ -25,7 +25,7 @@ typedef struct VecStr
 void
 VecStr_push(VecStr *self, char const *str)
 {
-    if (0 == self->cap) {
+    if (nullptr == self->ptr) {
         self->cap = VecStr_INITIAL_CAPACITY;
         self->ptr = calloc(self->cap, sizeof(*self->ptr));
 
@@ -44,9 +44,8 @@ VecStr_push(VecStr *self, char const *str)
     }
 
     char *str_clone = nullptr;
-    asprintf(&str_clone, "%s", str);
 
-    if (nullptr == str_clone) {
+    if (asprintf(&str_clone, "%s", str) < 0) {
         print_allocation_error_message();
         exit(EXIT_FAILURE);
     }
@@ -64,8 +63,7 @@ VecStr_drop(VecStr *self)
 
     free(self->ptr);
 
-    self->ptr = nullptr;
-    self->len = self->cap = 0;
+    *self = VecStr_DEFAULT;
 }
 
 typedef struct StrBuf
@@ -157,8 +155,6 @@ getcwd2(int dir_file_desc, char *result_buf, size_t result_buf_size)
         }
 
         if (SYSCALL_FAILURE == closedir(process_dir)) {
-            // Clanup
-            fchdir(process_dir_file_desc);
             return GETCWD2_FAILURE;
         }
 
@@ -190,9 +186,8 @@ getcwd2(int dir_file_desc, char *result_buf, size_t result_buf_size)
 
         for (auto entry = readdir(cur_dir); nullptr != entry; entry = readdir(cur_dir)) {
             char *path_from_cur = nullptr;
-            asprintf(&path_from_cur, "./%s", entry->d_name);
 
-            if (nullptr == path_from_cur) {
+            if (asprintf(&path_from_cur, "./%s", entry->d_name) < 0) {
                 print_allocation_error_message();
 
                 // Cleanup
@@ -254,41 +249,16 @@ getcwd2(int dir_file_desc, char *result_buf, size_t result_buf_size)
         result_size += 1 + strlen(paths_backwards.ptr[i]);
     }
 
-    if (SYSCALL_FAILURE == fchdir(process_dir_file_desc)) {
-        // Cleanup
-        VecStr_drop(&paths_backwards);
-        closedir(process_dir);
+    VecStr_drop(&paths_backwards);
 
+    if (SYSCALL_FAILURE == fchdir(process_dir_file_desc)) {
+        closedir(process_dir);
         return GETCWD2_FAILURE;
     }
 
     if (SYSCALL_FAILURE == closedir(process_dir)) {
-        // Cleanup
-        VecStr_drop(&paths_backwards);
         return GETCWD2_FAILURE;
     }
 
-    // Cleanup
-    VecStr_drop(&paths_backwards);
-
     return result_size;
-}
-
-int
-main(int argc, char *argv[])
-{
-    if (argc < 2) {
-        return 1;
-    }
-
-    char result_buf[4] = {};
-
-    auto dir = opendir(argv[1]);
-    auto dir_file_desc = dirfd(dir);
-
-    auto size = getcwd2(dir_file_desc, result_buf, sizeof(result_buf));
-
-    printf("%s\n", result_buf);
-
-    closedir(dir);
 }
