@@ -42,18 +42,16 @@ main(int argc, char *argv[])
     size_t n_files = 0;
 
     for (auto entry = readdir(dir); nullptr != entry; entry = readdir(dir)) {
-        char *absolute_path = nullptr;
-        asprintf(&absolute_path, "%s/%s", dir_path, entry->d_name);
+        char absolute_path[PATH_MAX] = {};
 
-        if (nullptr == absolute_path) {
-            exit(EXIT_FAILURE);
+        if (snprintf(absolute_path, sizeof(absolute_path), "%s/%s", dir_path, entry->d_name) >= PATH_MAX) {
+            continue;
         }
 
         auto file_stat = (struct stat){};
 
         if (SYSCALL_FAILURE == stat(absolute_path, &file_stat)) {
             fprintf(stderr, "failed to stat '%s': %s\n", absolute_path, strerror(errno));
-            free(absolute_path);
             exit(EXIT_FAILURE);
         }
 
@@ -63,8 +61,6 @@ main(int argc, char *argv[])
         if (is_regular_executable && contains_suffix(entry->d_name, entry_name_len, exe_suffix, EXE_SUFFIX_LEN)) {
             n_files += 1;
         }
-
-        free(absolute_path);
     }
 
     if (CLOSE_DIR_FAILURE == closedir(dir)) {

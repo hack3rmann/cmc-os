@@ -25,13 +25,8 @@ main(int argc, char *argv[])
         auto const file_path = argv[i];
         auto file_stat = (struct stat){};
 
-        if (SYSCALL_FAILURE == lstat(file_path, &file_stat)) {
-            continue;
-        }
-
-        auto const is_multiple_of_kibibyte = 0 == (file_stat.st_size & ONE_KIBIBYTE_MASK);
-
-        if (is_multiple_of_kibibyte && N_HARD_LINKS == file_stat.st_nlink && S_ISREG(file_stat.st_mode)) {
+        if (SYSCALL_FAILURE != lstat(file_path, &file_stat) && 0 == (file_stat.st_size & ONE_KIBIBYTE_MASK) &&
+            N_HARD_LINKS == file_stat.st_nlink && S_ISREG(file_stat.st_mode)) {
             size += file_stat.st_size;
         }
     }
