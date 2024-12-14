@@ -11,10 +11,21 @@ exit_last(pid_t initial_pid)
     if (getpid() == initial_pid) {
         printf("-1\n");
         fflush(stdout);
-        _exit(EXIT_SUCCESS);
+        exit(EXIT_SUCCESS);
     }
 
     _exit(EXIT_FAILURE);
+}
+
+[[noreturn]]
+void
+exit_process(pid_t pid, int32_t status)
+{
+    if (getpid() == pid) {
+        exit(status);
+    } else {
+        _exit(status);
+    }
 }
 
 void
@@ -23,7 +34,7 @@ make_process_recursive(pid_t initial_pid)
     auto cur_number = (int32_t){};
 
     if (EOF == scanf("%d", &cur_number)) {
-        _exit(EXIT_SUCCESS);
+        exit_process(initial_pid, EXIT_SUCCESS);
     };
 
     auto const pid = fork();

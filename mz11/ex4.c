@@ -20,10 +20,6 @@ main()
     }
 
     for (uint32_t i = 0; i < n_processes; i++) {
-        if (0 == fork()) {
-            continue;
-        }
-
         if (i == n_processes - 1) {
             printf("%u\n", i + 1);
         } else {
@@ -32,8 +28,9 @@ main()
 
         fflush(stdout);
 
-        wait(nullptr);
-
-        exit(EXIT_SUCCESS);
+        if (0 != fork()) {
+            wait(nullptr);
+            exit(EXIT_SUCCESS);
+        }
     }
 }
